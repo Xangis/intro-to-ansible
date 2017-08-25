@@ -1,0 +1,22 @@
+- hosts: api
+  tasks:
+    - name: Download Node.js source
+      get_url: 
+        url=https://nodejs.org/dist/v6.11.1/node-v6.11.1.tar.gz
+        dest=/tmp/node.tar.gz
+    - name: Make source directory.
+      file:
+          path: /tmp/node_source
+          state: directory
+          mode: 0777
+    - name: Extract Node.js source
+      unarchive:
+         src: /tmp/node.tar.gz
+         dest: /tmp/node_source
+         remote_src: True
+    - name: Build Node.js
+      shell: cd /tmp/node_source/node-v6.11.1 && ./configure && make && make install
+      become: true
+      become_user: root
+      become_method: sudo
+

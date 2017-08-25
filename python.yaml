@@ -1,0 +1,27 @@
+- hosts: api
+  tasks:
+   - name: Install Python-Dev
+     apt: pkg=python-dev state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install Pip
+     apt: pkg=python-pip state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install Virtualenv
+     apt: pkg=python-virtualenv state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install Virtualenvwrapper
+     apt: pkg=virtualenvwrapper state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install psycopg2 (needed for Ansible control of postgresql)
+     apt: pkg=python-psycopg2 state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo

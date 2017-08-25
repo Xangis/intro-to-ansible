@@ -1,0 +1,57 @@
+- hosts: api
+  tasks:
+   - name: Install aptitude
+     apt: pkg=aptitude state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install locate
+     apt: pkg=locate state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install git
+     become: true
+     become_user: root
+     become_method: sudo
+     apt: pkg=git state=installed update_cache=true
+   - name: Install curl
+     apt: pkg=curl state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install rsync
+     apt: pkg=rsync state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install binutils
+     apt: pkg=binutils state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install build-essential
+     apt: pkg=build-essential state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install ca-certificates root certificate package
+     apt: pkg=ca-certificates state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install uwsgi
+     apt: pkg=uwsgi state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install uwsgi-plugin-python
+     apt: pkg=uwsgi-plugin-python state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install nginx
+     apt: pkg=nginx state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo

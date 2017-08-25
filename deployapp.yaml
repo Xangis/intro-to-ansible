@@ -1,0 +1,161 @@
+- hosts: api
+  vars_prompt:
+  - name: "gituser"
+    prompt: "Enter your git username"
+    private: no
+  - name: "gitpassword"
+    prompt: "Enter your git pasword"
+    private: yes
+  tasks:
+  - name: Create myapp user
+    user:
+      name: myapp
+      password:
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Create application directory
+    file:
+      path: /var/node/myapp
+      state: directory
+      mode: 0777
+      owner: myapp
+      group: myapp
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Clone git repository
+    git:
+      dest: /var/node/myapp/
+      repo: https://{{ gituser }}:{{ gitpassword }}@github.com/myapp/server
+      update: yes
+    register: git_finished
+    become: true
+    become_user: myapp
+    become_method: sudo
+  - name: Install Python requirements
+    pip:
+      requirements: /var/node/myapp/admin/requirements.txt
+      virtualenv: /home/myapp/virtualenvs/myapp
+      virtualenv_python: python2.7
+    become: true
+    become_user: myapp
+    become_method: sudo
+    when: git_finished.changed
+  - name: Run Django migrations.
+    command: /home/myapp/virtualenvs/myapp/bin/python /var/node/myapp/admin/manage.py migrate
+    when: git_finished.changed
+  - name: Run npm install for Node.js dependencies
+    npm:
+      path: /var/node/myapp/
+    when: git_finished.changed
+    become: true
+    become_user: myapp
+    become_method: sudo
+  - name: Make sure default nginx config is gone.
+    file:
+      path: /etc/nginx/sites-enabled/default
+      state: absent
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Copy nginx site config file to /etc/nginx/sites-avaialble/
+    copy:
+      src: myapp.nginx
+      dest: /etc/nginx/sites-available/myapp.nginx
+      owner: root
+      group: root
+      mode: 0644
+    become: true
+    become_user: root
+    become_method: sudo
+  # You should not store your SSL certificate in your git repo.
+  - name: Copy nginx.key certificate config
+    copy:
+      src: myapp.nginx
+      dest: /etc/nginx/ssl/nginx.key
+      owner: root
+      group: root
+      mode: 0644
+    become: true
+    become_user: root
+    become_method: sudo
+  # You should not store your SSL certificate in your git repo.
+  - name: Copy nginx.crt certificate
+    copy:
+      src: myapp.nginx
+      dest: /etc/nginx/ssl/nginx.crt
+      owner: root
+      group: root
+      mode: 0644
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Symbolic link for nginx config
+    file:
+      src: /etc/nginx/sites-available/myapp.nginx
+      dest: /etc/nginx/sites-enabled/myapp.nginx
+      state: link
+    become: true
+    become_user: root
+    become_method: sudo
+    register: nginx_configured
+  - name: Restart nginx
+    when: nginx_configured.changed
+    service: 
+      name: nginx
+      state: restarted
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Copy myapp node.js app service config to systemd folder
+    copy:
+      src: myapp.service
+      dest: /lib/systemd/system/myapp.service
+      owner: root
+      group: root
+      mode: 0644
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Copy myapp admin Django app interface service config to systemd folder
+    copy:
+      src: myappadmin.service
+      dest: /lib/systemd/system/myappadmin.service
+      owner: root
+      group: root
+      mode: 0644
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Copy myapp data updates service config to systemd folder
+    copy:
+      src: myappupdates.service
+      dest: /lib/systemd/system/myappupdates.service
+      owner: root
+      group: root
+      mode: 0644
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Restart Node.js app service
+    service: 
+      name: myapp 
+      state: restarted
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Restart Django admin service
+    service: 
+      name: myappadmin 
+      state: restarted
+    become: true
+    become_user: root
+    become_method: sudo
+  - name: Restart Node.js data update service
+    service: 
+      name: myappupdates 
+      state: restarted
+    become: true
+    become_user: root
+    become_method: sudo

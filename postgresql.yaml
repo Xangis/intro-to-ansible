@@ -1,0 +1,109 @@
+# This installs PostgreSQL 9.5 with PostGIS from the official repository.
+- hosts: api
+  tasks:
+   - name: add apt key
+     become: true
+     become_user: root
+     become_method: sudo
+     apt_key:
+       url: 'https://www.postgresql.org/media/keys/ACCC4CF8.asc'
+       state: present
+   - name: add apt repository
+     become: true
+     become_user: root
+     become_method: sudo
+     apt_repository:
+       repo: 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main'
+       state: present
+       filename: 'pgdg'
+   - name: Install PostgreSQL
+     apt: pkg=postgresql-9.5 state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install PostGIS
+     apt: pkg=postgresql-9.5-postgis-2.2 state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install PostgreSQL Client
+     apt: pkg=postgresql-client-9.5 state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install PostgreSQL Development package
+     apt: pkg=postgresql-server-dev-9.5 state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install gdal-bin
+     apt: pkg=gdal-bin state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Install libproj-dev
+     apt: pkg=libproj-dev state=installed update_cache=true
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Change user authentication to password via pg_hba.conf
+     copy:
+       src: pg_hba.conf
+       dest: /etc/postgresql/9.5/main/pg_hba.conf
+       owner: postgres
+       group: postgres
+       mode: 0644
+     become: true
+     become_user: root
+     become_method: sudo
+   - name: Restart postgres service
+     service:
+       name: postgresql
+       state: reloaded
+     become: true
+     become_user: root
+     become_method: sudo
+   # TODO: Get the db password from a user prompt or environment variable.
+   - name: Create database user
+     postgresql_user:
+       name: myuser
+       password: NeverDoThis!
+       role_attr_flags: CREATEDB
+       state: present
+     become: true
+     become_user: postgres
+     become_method: sudo
+   - name: Create database
+     postgresql_db:
+       name: myuser
+       owner: myuser
+       state: present
+     become: true
+     become_user: postgres
+     become_method: sudo
+     register: db_created
+   - name: Add PostGIS extensions to database
+     postgresql_ext:
+       name: postgis
+       db: myuser
+     become: true
+     become_user: postgres
+     become_method: sudo
+     when: db_created.changed
+   - name: Copy initial service definitions SQL file to server.
+     copy:
+       src: initial_services.sql
+       dest: /tmp/initial_services.sql
+       owner: postgres
+       group: postgres
+       mode: 0644      
+     become: true
+     become_user: root
+     become_method: sudo
+     when: db_created.changed
+   - name: Add initial service definitions to database.
+     become: true
+     become_user: postgres
+     become_method: sudo
+     shell: psql myuser < /tmp/initial_services.sql
+     when: db_created.changed

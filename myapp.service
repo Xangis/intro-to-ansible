@@ -1,0 +1,14 @@
+[Unit]
+Description=Runs the Myapp API server on port 8080.
+After=postgresql.service
+
+[Service]
+User=myapp
+Type=simple
+WorkingDirectory=/var/node/myapp/
+ExecStart=/usr/local/bin/node app.js
+Restart=restart-always
+PIDFile=/var/run/myapp.pid
+
+[Install]
+WantedBy=multi-user.target

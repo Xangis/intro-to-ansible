@@ -1,0 +1,56 @@
+# the IP(s) on which your node server is running. I chose port 8080.
+upstream node_api {
+    server 127.0.0.1:8080;
+    keepalive 60;
+}
+
+# the nginx server instance
+server {
+    listen 0.0.0.0:80 default;
+    server_name myapp.example.com localhost;
+    listen 443 ssl;
+    access_log /var/log/nginx/myapp_nginx.log;
+    error_log /var/log/nginx/myapp_nginx_errors.log;
+    gzip on;
+    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml text/javascript;
+    gzip_vary on;
+    gzip_proxied any;
+    
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_certificate /etc/nginx/ssl/nginx.crt;
+    ssl_certificate_key /etc/nginx/ssl/nginx.key;
+
+    # Uncomment to redirect all connections to SSL
+    #if ($ssl_protocol = "") {
+    #    return 301 https:$host$request_uri;
+    #}
+
+    location ~ ^/static/admin/ {
+        root /home/myapp/virtualenvs/myapp/lib/python2.7/site-packages/django/contrib/admin/;     
+    }
+
+    location ~ ^/static/leaflet/ {
+        root /home/myapp/virtualenvs/myapp/lib/python2.7/site-packages/leaflet/;
+    }
+
+    location ~ ^/images/ {
+        root /var/node/myapp/;
+    }
+
+    # uWSGI connection to the Django admin site.
+    location /adm {
+        include /etc/nginx/uwsgi_params;
+        uwsgi_pass 127.0.0.1:9144;
+    }
+
+    # Pass the request to the node.js API server.
+    location / {
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $http_host;
+      proxy_set_header X-NginX-Proxy true;
+
+      proxy_pass http://node_api/;
+      proxy_redirect off;
+    }
+ }
