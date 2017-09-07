@@ -7,7 +7,7 @@ User=myapp
 Type=simple
 WorkingDirectory=/var/node/myapp/data_import/
 ExecStart=/usr/local/bin/node update_data.js
-Restart=restart-always
+Restart=always
 PIDFile=/var/run/myappupdates.pid
 
 [Install]

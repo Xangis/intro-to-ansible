@@ -7,7 +7,7 @@ User=myapp
 Type=simple
 WorkingDirectory=/var/node/myapp/
 ExecStart=/usr/local/bin/node app.js
-Restart=restart-always
+Restart=always
 PIDFile=/var/run/myapp.pid
 
 [Install]
