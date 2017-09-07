@@ -72,7 +72,7 @@
   # You should not store your SSL certificate in your git repo.
   - name: Copy nginx.key certificate config
     copy:
-      src: myapp.nginx
+      src: nginx.key
       dest: /etc/nginx/ssl/nginx.key
       owner: root
       group: root
@@ -83,7 +83,7 @@
   # You should not store your SSL certificate in your git repo.
   - name: Copy nginx.crt certificate
     copy:
-      src: myapp.nginx
+      src: nginx.crt
       dest: /etc/nginx/ssl/nginx.crt
       owner: root
       group: root
